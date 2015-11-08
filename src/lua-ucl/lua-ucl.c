@@ -123,9 +123,9 @@ int luaucl_decompress(lua_State* L) {
 }
 
 int luaucl_version(lua_State* L) {
-    lua_pushinteger(L, UCL_VERSION);
-    lua_pushstring(L, UCL_VERSION_STRING);
-    lua_pushstring(L, UCL_VERSION_DATE);
+    lua_pushinteger(L, ucl_version());
+    lua_pushstring(L, ucl_version_string());
+    lua_pushstring(L, ucl_version_date());
     return 3;
 }
 
