@@ -10,6 +10,9 @@
 #include <lauxlib.h>
 
 #include <ucl/ucl.h>
+#ifdef UCL_USE_ASM
+#  include <ucl/ucl_asm.h>
+#endif
 
 #if LUA_VERSION_NUM == 501
 #define luaucl_setfuncs(L, funcs) luaL_register(L, NULL, funcs)
@@ -101,7 +104,11 @@ int luaucl_decompress(lua_State* L) {
     ucl_uint output_len = luaL_checkinteger(L, 2);
     void* output = lua_newuserdata(L, output_len);
     ucl_voidp wrkmem = NULL;
+#ifdef UCL_USE_ASM
+    int status = ucl_nrv2b_decompress_asm_safe_8(
+#else
     int status = ucl_nrv2b_decompress_safe_8(
+#endif
         input,
         input_len,
         output,
