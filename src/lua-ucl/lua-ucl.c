@@ -67,7 +67,7 @@ int luaucl_compress(lua_State* L) {
         }
     }
     luaL_argcheck(L, level >= 1, 2, "level must be >= 1");
-    luaL_argcheck(L, level <= 9, 2, "level must be <= 9");
+    luaL_argcheck(L, level <= 10, 2, "level must be <= 10");
     // see UCL's README
     ucl_uint output_len = input_len + (input_len / 8) + 256;
     void* output = lua_newuserdata(L, output_len);
