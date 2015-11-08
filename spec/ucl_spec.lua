@@ -35,8 +35,8 @@ describe("lua-ucl", function()
         local orig = string.rep('A', 1000)
         for level = 1, 9 do
             local compressed = ucl.compress(orig, level)
-            local decompressed = ucl.decompress(compressed, #orig)
-            assert.equal(decompressed, orig)
+            local decomp = ucl.decompress(compressed, #orig)
+            assert.equal(decomp, orig)
         end
     end)
 
