@@ -122,6 +122,10 @@ luaL_Reg luaucl_functions[] = {
 };
 
 int luaopen_ucl(lua_State* L) {
+    int status = ucl_init();
+    if (status != UCL_E_OK) {
+        return luaucl_error(L, status);
+    }
     int nf = sizeof(luaucl_functions) / sizeof(luaL_Reg) - 1;
     lua_createtable(L, 0, nf);
     luaucl_setfuncs(L, luaucl_functions);
