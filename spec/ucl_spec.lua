@@ -69,4 +69,21 @@ describe("lua-ucl", function()
         assert.equal(expected, decompressed)
     end)
 
+    it("compress throws error on bad compression level",
+    function()
+        local ucl = require 'ucl'
+        assert.has_error(function()
+            ucl.compress('text', 0)
+        end)
+        assert.has_error(function()
+            ucl.compress('text', 11)
+        end)
+        assert.has_error(function()
+            ucl.compress('text', 'foo')
+        end)
+        assert.has_not_error(function()
+            ucl.compress('text', '5')
+        end)
+    end)
+
 end)
