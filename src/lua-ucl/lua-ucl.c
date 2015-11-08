@@ -99,7 +99,7 @@ int luaucl_decompress(lua_State* L) {
     ucl_uint output_len = luaL_checkinteger(L, 2);
     void* output = lua_newuserdata(L, output_len);
     ucl_voidp wrkmem = NULL;
-    int status = ucl_nrv2b_decompress_8(
+    int status = ucl_nrv2b_decompress_safe_8(
         input,
         input_len,
         output,
