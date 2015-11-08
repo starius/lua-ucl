@@ -21,4 +21,23 @@ describe("lua-ucl", function()
         assert.equal(decompressed, orig)
     end)
 
+    it("compresses large string", function()
+        local ucl = require 'ucl'
+        local orig = string.rep('ATGC', 1000000)  -- 4 MiB
+        local compressed = ucl.compress(orig)
+        assert.truthy(#compressed < #orig)
+        local decompressed = ucl.decompress(compressed, #orig)
+        assert.equal(decompressed, orig)
+    end)
+
+    it("uses custom compression level", function()
+        local ucl = require 'ucl'
+        local orig = string.rep('A', 1000)
+        for level = 1, 9 do
+            local compressed = ucl.compress(orig, level)
+            local decompressed = ucl.decompress(compressed, #orig)
+            assert.equal(decompressed, orig)
+        end
+    end)
+
 end)

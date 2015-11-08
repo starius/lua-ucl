@@ -17,14 +17,27 @@
 #define luaucl_setfuncs(L, funcs) luaL_setfuncs(L, funcs, 0)
 #endif
 
+const int MIN_LARGE_SIZE = 512 * 1024;  // 512 KiB
+
 int luaucl_compress(lua_State* L) {
     size_t input_len;
     const char* input = luaL_checklstring(L, 1, &input_len);
+    const int DEFAULT_LEVEL = 777;
+    int level = luaL_optinteger(L, 2, DEFAULT_LEVEL);
+    if (level == DEFAULT_LEVEL) {
+        // UPX's default level, see upx(1)
+        if (input_len < MIN_LARGE_SIZE) {
+            level = 8;
+        } else {
+            level = 7;
+        }
+    }
+    luaL_argcheck(L, level >= 1, 2, "level must be >= 1");
+    luaL_argcheck(L, level <= 9, 2, "level must be <= 9");
     // see UCL's README
     ucl_uint output_len = input_len + (input_len / 8) + 256;
     void* output = lua_newuserdata(L, output_len);
     ucl_progress_callback_p callback = NULL;
-    int level = 9;
     struct ucl_compress_config_p conf = NULL;
     ucl_uintp result = NULL;
     int status = ucl_nrv2b_99_compress(
