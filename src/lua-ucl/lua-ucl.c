@@ -51,6 +51,11 @@ const char* ucl_name_code(int code) {
     return name;
 }
 
+int luaucl_error(lua_State* L, int code) {
+    const char* text = ucl_name_code(code);
+    return luaL_error(L, "UCL error occurred: %s", text);
+}
+
 const int MIN_LARGE_SIZE = 512 * 1024;  // 512 KiB
 
 int luaucl_compress(lua_State* L) {
@@ -83,8 +88,7 @@ int luaucl_compress(lua_State* L) {
         result
     );
     if (status != UCL_E_OK) {
-        const char* text = ucl_name_code(status);
-        return luaL_error(L, "UCL error occurred: %s", text);
+        return luaucl_error(L, status);
     }
     lua_pushlstring(L, output, output_len);
     return 1;
@@ -105,8 +109,7 @@ int luaucl_decompress(lua_State* L) {
         wrkmem
     );
     if (status != UCL_E_OK) {
-        const char* text = ucl_name_code(status);
-        return luaL_error(L, "UCL error occurred: %s", text);
+        return luaucl_error(L, status);
     }
     lua_pushlstring(L, output, output_len);
     return 1;
