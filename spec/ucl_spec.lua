@@ -86,4 +86,21 @@ describe("lua-ucl", function()
         end)
     end)
 
+    it("decompress throws error if no output size", function()
+        local ucl = require 'ucl'
+        local compressed = ucl.compress('text')
+        assert.has_error(function()
+            ucl.decompress(compressed)
+        end)
+    end)
+
+    it("decompress throws error if output size is too small",
+    function()
+        local ucl = require 'ucl'
+        local compressed = ucl.compress('text')
+        assert.has_error(function()
+            ucl.decompress(compressed, 1)
+        end)
+    end)
+
 end)
