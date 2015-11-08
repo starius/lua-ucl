@@ -13,10 +13,8 @@
 
 #if LUA_VERSION_NUM == 501
 #define luaucl_setfuncs(L, funcs) luaL_register(L, NULL, funcs)
-#define luaucl_objlen lua_objlen
 #else
 #define luaucl_setfuncs(L, funcs) luaL_setfuncs(L, funcs, 0)
-#define luaucl_objlen lua_rawlen
 #endif
 
 int luaucl_compress(lua_State* L) {
