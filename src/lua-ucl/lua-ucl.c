@@ -96,7 +96,7 @@ int luaucl_decompress(lua_State* L) {
     size_t input_len;
     const char* input = luaL_checklstring(L, 1, &input_len);
     // output_len is max possible output
-    int output_len = luaL_checkinteger(L, 2);
+    ucl_uint output_len = luaL_checkinteger(L, 2);
     void* output = lua_newuserdata(L, output_len);
     ucl_voidp wrkmem = NULL;
     int status = ucl_nrv2b_decompress_8(
