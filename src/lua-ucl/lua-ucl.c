@@ -17,6 +17,40 @@
 #define luaucl_setfuncs(L, funcs) luaL_setfuncs(L, funcs, 0)
 #endif
 
+typedef struct ucl_code_Reg {
+    const char* name;
+    int code;
+} ucl_code_Reg;
+
+#define UCL_CODE(code) {#code, code}
+static ucl_code_Reg ucl_codes[] = {
+    UCL_CODE(UCL_E_OK),
+    UCL_CODE(UCL_E_ERROR),
+    UCL_CODE(UCL_E_INVALID_ARGUMENT),
+    UCL_CODE(UCL_E_OUT_OF_MEMORY),
+    UCL_CODE(UCL_E_NOT_COMPRESSIBLE),
+    UCL_CODE(UCL_E_INPUT_OVERRUN),
+    UCL_CODE(UCL_E_OUTPUT_OVERRUN),
+    UCL_CODE(UCL_E_LOOKBEHIND_OVERRUN),
+    UCL_CODE(UCL_E_EOF_NOT_FOUND),
+    UCL_CODE(UCL_E_INPUT_NOT_CONSUMED),
+    UCL_CODE(UCL_E_OVERLAP_OVERRUN),
+    {}
+};
+#undef UCL_CODE
+
+const char* ucl_name_code(int code) {
+    const char* name = "Unknown error";
+    ucl_code_Reg* i;
+    for (i = ucl_codes; i->name; ++i) {
+        if (i->code == code) {
+            name = i->name;
+            break;
+        }
+    }
+    return name;
+}
+
 const int MIN_LARGE_SIZE = 512 * 1024;  // 512 KiB
 
 int luaucl_compress(lua_State* L) {
@@ -51,8 +85,8 @@ int luaucl_compress(lua_State* L) {
         result
     );
     if (status != UCL_E_OK) {
-        // TODO implement all statuses from uclconf.h
-        return luaL_error(L, "UCL error occurred");
+        const char* text = ucl_name_code(status);
+        return luaL_error(L, "UCL error occurred: %s", text);
     }
     lua_pushlstring(L, output, output_len);
     return 1;
@@ -73,8 +107,8 @@ int luaucl_decompress(lua_State* L) {
         wrkmem
     );
     if (status != UCL_E_OK) {
-        // TODO implement all statuses from uclconf.h
-        return luaL_error(L, "UCL error occurred");
+        const char* text = ucl_name_code(status);
+        return luaL_error(L, "UCL error occurred: %s", text);
     }
     lua_pushlstring(L, output, output_len);
     return 1;
