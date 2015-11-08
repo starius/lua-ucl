@@ -40,4 +40,23 @@ describe("lua-ucl", function()
         end
     end)
 
+    local function fromHex(str)
+        return (str:gsub('..', function(cc)
+            return string.char(tonumber(cc, 16))
+        end))
+    end
+
+    it("decompresses known text (ucl/examples/simple.c)",
+    function()
+        local ucl = require 'ucl'
+        local compressed_hex = '9200' ..
+            string.rep('AAA8C9555464AAAA325555192', 31) ..
+            'AAA8C9555464AAAA325555080000000000240FF'
+        local compressed = fromHex(compressed_hex)
+        local size = 262144
+        local decompressed = ucl.decompress(compressed, size)
+        local expected = string.char(0x00):rep(size)
+        assert.equal(expected, decompressed)
+    end)
+
 end)
