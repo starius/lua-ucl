@@ -12,6 +12,14 @@ describe("lua-ucl", function()
         local ucl = require 'ucl'
     end)
 
+    it("gets a version and a date", function()
+        local ucl = require 'ucl'
+        local ver_int, ver_str, ver_date = ucl.version()
+        assert.equal("number", type(ver_int))
+        assert.equal("string", type(ver_str))
+        assert.equal("string", type(ver_date))
+    end)
+
     it("compresses a string", function()
         local ucl = require 'ucl'
         local orig = string.rep('A', 1000)

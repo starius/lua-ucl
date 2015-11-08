@@ -115,9 +115,17 @@ int luaucl_decompress(lua_State* L) {
     return 1;
 }
 
+int luaucl_version(lua_State* L) {
+    lua_pushinteger(L, UCL_VERSION);
+    lua_pushstring(L, UCL_VERSION_STRING);
+    lua_pushstring(L, UCL_VERSION_DATE);
+    return 3;
+}
+
 luaL_Reg luaucl_functions[] = {
     {"compress", luaucl_compress},
     {"decompress", luaucl_decompress},
+    {"version", luaucl_version},
     {}
 };
 
