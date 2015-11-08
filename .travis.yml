@@ -20,6 +20,7 @@ install:
   - luarocks make UCL_LIBDIR=/usr/lib/x86_64-linux-gnu/
 
 before_script:
+  - luarocks install busted
   - sudo apt-get install valgrind
 
 script:
