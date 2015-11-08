@@ -1,0 +1,33 @@
+language: cpp
+
+env:
+  global:
+    - LUAROCKS=2.2.2
+  matrix:
+    - LUA=lua5.1
+    - LUA=lua5.2
+    - LUA=lua5.3
+    - LUA=luajit     # latest stable version (2.0.4)
+    - LUA=luajit2.0  # current head of 2.0 branch
+    - LUA=luajit2.1  # current head of 2.1 branch
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install libucl-dev
+  - source .travis/setenv_lua.sh
+
+install:
+  - luarocks make UCL_LIBDIR=/usr/lib/x86_64-linux-gnu/
+
+before_script:
+  - sudo apt-get install valgrind
+
+script:
+  - busted
+  - if [[ "$LUA" != *"luajit"* ]]; then bash .travis/valgrind_test.sh; fi
+  - luarocks make CFLAGS="-O0 -fPIC -ftest-coverage -fprofile-arcs" LIBFLAG="-shared --coverage"
+  - busted
+
+after_success:
+  - sudo pip install cpp-coveralls
+  - coveralls --include src
