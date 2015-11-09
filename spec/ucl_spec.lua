@@ -129,4 +129,20 @@ describe("lua-ucl", function()
         end
     end)
 
+    it("throws on unknown (de)compression method", function()
+        local ucl = require 'ucl'
+        assert.has_error(function()
+            ucl.compress('text', 1, "foo")
+        end)
+        assert.has_error(function()
+            ucl.compress('text', 1, {})
+        end)
+        assert.has_error(function()
+            ucl.decompress('text', 100, "foo")
+        end)
+        assert.has_error(function()
+            ucl.decompress('text', 100, {})
+        end)
+    end)
+
 end)

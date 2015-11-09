@@ -102,7 +102,6 @@ luaucl_compress_t ucl_compress_by_name(
             return i->func;
         }
     }
-    luaL_error(L, "Unknown compression method: %s", name);
     return NULL;
 }
 
@@ -137,7 +136,6 @@ ucl_decompress_t ucl_decompress_by_name(
             return i->func;
         }
     }
-    luaL_error("Unknown decompression method: %s", name);
     return NULL;
 }
 
@@ -153,6 +151,9 @@ int luaucl_compress(lua_State* L) {
     int level = luaL_optinteger(L, 2, DEFAULT_LEVEL);
     const char* method = luaL_optstring(L, 3, DEFAULT_METHOD);
     luaucl_compress_t func = ucl_compress_by_name(L, method);
+    if (!func) {
+        return luaL_error(L, "Unknown method: %s", method);
+    }
     if (level == DEFAULT_LEVEL) {
         // UPX's default level, see upx(1)
         if (input_len < MIN_LARGE_SIZE) {
@@ -191,6 +192,9 @@ int luaucl_decompress(lua_State* L) {
     ucl_uint output_len = luaL_checkinteger(L, 2);
     const char* method = luaL_optstring(L, 3, DEFAULT_METHOD);
     ucl_decompress_t func = ucl_decompress_by_name(L, method);
+    if (!func) {
+        return luaL_error(L, "Unknown method: %s", method);
+    }
     void* output = lua_newuserdata(L, output_len);
     ucl_voidp wrkmem = NULL;
     int status = func(
