@@ -72,9 +72,9 @@ describe("lua-ucl", function()
             'AAA8C9555464AAAA325555080000000000240FF'
         local compressed = fromHex(compressed_hex)
         local size = 262144
-        local decompressed = ucl.decompress(compressed, size)
+        local de = ucl.decompress(compressed, size, "nrv2b")
         local expected = string.char(0x00):rep(size)
-        assert.equal(expected, decompressed)
+        assert.equal(expected, de)
     end)
 
     it("compress throws error on bad compression level",

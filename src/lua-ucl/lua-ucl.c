@@ -144,7 +144,7 @@ ucl_decompress_t ucl_decompress_by_name(
 // high level functions
 
 const int MIN_LARGE_SIZE = 512 * 1024;  // 512 KiB
-const char* DEFAULT_METHOD = "nrv2b";
+const char* DEFAULT_METHOD = "nrv2d";
 
 int luaucl_compress(lua_State* L) {
     size_t input_len;
