@@ -111,4 +111,22 @@ describe("lua-ucl", function()
         end)
     end)
 
+    it("decompress throws error if method mismatches",
+    function()
+        local ucl = require 'ucl'
+        local compressed = ucl.compress('text', 5, "nrv2b")
+        assert.has_error(function()
+            ucl.decompress(compressed, 100, "nrv2d")
+        end)
+    end)
+
+    it("uses methods", function()
+        local ucl = require 'ucl'
+        for _, method in ipairs {"nrv2b", "nrv2d", "nrv2e"} do
+            local comp = ucl.compress('text', 5, method)
+            local decomp = ucl.decompress(comp, 4, method)
+            assert.equal('text', decomp)
+        end
+    end)
+
 end)

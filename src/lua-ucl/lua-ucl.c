@@ -6,6 +6,8 @@
 // written in ANSI C
 // See http://www.oberhumer.com/opensource/ucl/
 
+#include <string.h>
+
 #include <lua.h>
 #include <lauxlib.h>
 
@@ -14,11 +16,15 @@
 #  include <ucl/ucl_asm.h>
 #endif
 
+// Lua compatibility
+
 #if LUA_VERSION_NUM == 501
 #define luaucl_setfuncs(L, funcs) luaL_register(L, NULL, funcs)
 #else
 #define luaucl_setfuncs(L, funcs) luaL_setfuncs(L, funcs, 0)
 #endif
+
+// errors registry
 
 typedef struct ucl_code_Reg {
     const char* name;
@@ -59,13 +65,94 @@ int luaucl_error(lua_State* L, int code) {
     return luaL_error(L, "UCL error occurred: %s", text);
 }
 
+// compression functions registry
+
+// ucl_compress_t from UCL has wrong signature
+typedef int
+(__UCL_CDECL *luaucl_compress_t)(
+    const ucl_bytep src,
+    ucl_uint src_len,
+    ucl_bytep dst,
+    ucl_uintp dst_len,
+    ucl_progress_callback_p cb,
+    int level,
+    const struct ucl_compress_config_p conf,
+    ucl_uintp result
+);
+
+typedef struct ucl_compress_Reg {
+    const char* name;
+    luaucl_compress_t func;
+} ucl_compress_Reg;
+
+static ucl_compress_Reg ucl_compress_funcs[] = {
+    {"nrv2b", ucl_nrv2b_99_compress},
+    {"nrv2d", ucl_nrv2d_99_compress},
+    {"nrv2e", ucl_nrv2e_99_compress},
+    {}
+};
+
+luaucl_compress_t ucl_compress_by_name(
+    lua_State* L,
+    const char* name
+) {
+    ucl_compress_Reg* i;
+    for (i = ucl_compress_funcs; i->name; ++i) {
+        if (strcmp(i->name, name) == 0) {
+            return i->func;
+        }
+    }
+    luaL_error(L, "Unknown compression method: %s", name);
+    return NULL;
+}
+
+// compression functions registry
+
+typedef struct ucl_decompress_Reg {
+    const char* name;
+    ucl_decompress_t func;
+} ucl_decompress_Reg;
+
+// *_le16 and *_le32 do not decompress TODO
+static ucl_decompress_Reg ucl_decompress_funcs[] = {
+#ifdef UCL_USE_ASM
+    {"nrv2b", ucl_nrv2b_decompress_asm_safe_8},
+    {"nrv2d", ucl_nrv2d_decompress_asm_safe_8},
+    {"nrv2e", ucl_nrv2e_decompress_asm_safe_8},
+#else
+    {"nrv2b", ucl_nrv2b_decompress_safe_8},
+    {"nrv2d", ucl_nrv2d_decompress_safe_8},
+    {"nrv2e", ucl_nrv2e_decompress_safe_8},
+#endif
+    {}
+};
+
+ucl_decompress_t ucl_decompress_by_name(
+    lua_State* L,
+    const char* name
+) {
+    ucl_decompress_Reg* i;
+    for (i = ucl_decompress_funcs; i->name; ++i) {
+        if (strcmp(i->name, name) == 0) {
+            return i->func;
+        }
+    }
+    luaL_error("Unknown decompression method: %s", name);
+    return NULL;
+}
+
+// high level functions
+
 const int MIN_LARGE_SIZE = 512 * 1024;  // 512 KiB
+const char* DEFAULT_METHOD = "nrv2b";
 
 int luaucl_compress(lua_State* L) {
     size_t input_len;
     const char* input = luaL_checklstring(L, 1, &input_len);
     const int DEFAULT_LEVEL = 777;
     int level = luaL_optinteger(L, 2, DEFAULT_LEVEL);
+    const char* method = luaL_optstring(L, 3, DEFAULT_METHOD);
+    luaucl_compress_t func = ucl_compress_by_name(L, method);
     if (level == DEFAULT_LEVEL) {
         // UPX's default level, see upx(1)
         if (input_len < MIN_LARGE_SIZE) {
@@ -80,7 +167,7 @@ int luaucl_compress(lua_State* L) {
     ucl_progress_callback_p callback = NULL;
     struct ucl_compress_config_p conf = NULL;
     ucl_uintp result = NULL;
-    int status = ucl_nrv2b_99_compress(
+    int status = func(
         input,
         input_len,
         output,
@@ -102,13 +189,11 @@ int luaucl_decompress(lua_State* L) {
     const char* input = luaL_checklstring(L, 1, &input_len);
     // output_len is max possible output
     ucl_uint output_len = luaL_checkinteger(L, 2);
+    const char* method = luaL_optstring(L, 3, DEFAULT_METHOD);
+    ucl_decompress_t func = ucl_decompress_by_name(L, method);
     void* output = lua_newuserdata(L, output_len);
     ucl_voidp wrkmem = NULL;
-#ifdef UCL_USE_ASM
-    int status = ucl_nrv2b_decompress_asm_safe_8(
-#else
-    int status = ucl_nrv2b_decompress_safe_8(
-#endif
+    int status = func(
         input,
         input_len,
         output,
